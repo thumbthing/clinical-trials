@@ -12,14 +12,16 @@ const baseHeaders = {
 export const api = axios.create(baseHeaders);
 
 export const getSearchTerms = async (searchQuery: string) => {
-  const searchParams = { q: searchQuery };
   try {
+    const searchParams = { q: searchQuery };
     const response = await api.get('/sick', { params: searchParams });
-
+    console.info('calling api');
     if (response?.status !== 200) {
       throw new Error('fail to get search terms');
     }
+    return response;
   } catch (error) {
     handleError(error);
+    return null;
   }
 };
