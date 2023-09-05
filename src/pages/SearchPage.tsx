@@ -1,13 +1,19 @@
 import React from 'react';
 import SearchInput from '../components/SearchInput';
 import SuggestedSearchTermList from '../components/SuggestedSearchTermList';
+import { SearchProvider } from '../context/SearchContext';
+import { FunctionContext } from '../context/FunctionContext';
 
 function SearchPage() {
   return (
-    <div>
-      <SearchInput />
-      <SuggestedSearchTermList />
-    </div>
+    <SearchProvider>
+      <FunctionContext>
+        <div>
+          <SearchInput />
+          <SuggestedSearchTermList />
+        </div>
+      </FunctionContext>
+    </SearchProvider>
   );
 }
 
