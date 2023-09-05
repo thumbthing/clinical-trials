@@ -1,5 +1,5 @@
 import axios from 'axios';
-import handleError from '../utils/errorHandle';
+import handleError from '../utils/errorHandler';
 
 const SERVER_URL = 'http://localhost:4000';
 const DEFAULT_PARAMS = {};
