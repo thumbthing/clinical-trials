@@ -1,7 +1,12 @@
 import React from 'react';
+import SearchPage from './pages/SearchPage';
 
 function App() {
-	return <div>clinical trials</div>;
+  return (
+    <div>
+      <SearchPage />
+    </div>
+  );
 }
 
 export default App;
