@@ -19,5 +19,6 @@ export type FunctionType = {
   getTerm: (searchText: string) => Promise<SickArray[]>;
   /* eslint-disable no-unused-vars */
   addToSessionStorage: (searchText: string, responseData: SickArray[]) => Promise<void>;
-  deleteOldSession: () => void;
+  /* eslint-disable no-unused-vars */
+  deleteOldSession: (key: string) => void;
 };
