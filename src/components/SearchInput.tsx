@@ -27,12 +27,12 @@ function SearchInput() {
 
   const handleChangeInput = async (e: ChangeEvent<HTMLInputElement>) => {
     try {
+      setState((prevState) => ({ ...prevState, input: e.target.value }));
       const debouncedChangeInput = debounceFunction(changeInput, 1000);
       const text = await debouncedChangeInput(e);
       const formatedText = text.trim();
       const inputValid = checkInputValid(formatedText);
       if (formatedText && inputValid) {
-        setState((prevState) => ({ ...prevState, input: formatedText }));
         await getTermAndAddToSessionStorage(text);
       }
     } catch (error) {
@@ -54,14 +54,24 @@ function SearchInput() {
   }, [state.cachedId]);
 
   useEffect(() => {
-    setTimeout(() => deleteOldTerm(), 10000);
+    setTimeout(() => deleteOldTerm(), 100000000);
   }, [state.cachedId]);
+
+  const resetInput = async () => {
+    try {
+      setState((prevState) => ({ ...prevState, input: '' }));
+    } catch (error) {
+      handleError(error);
+    }
+  };
 
   return (
     <div>
       <button type="button">뒤로가기</button>
-      <input type="text" onChange={handleChangeInput} placeholder="검색창" />
-      <button type="button">input 창 삭제</button>
+      <input type="text" onChange={handleChangeInput} placeholder="검색창" value={state.input} />
+      <button type="button" onClick={resetInput}>
+        input 창 삭제
+      </button>
       <button type="submit">검색하기</button>
     </div>
   );
