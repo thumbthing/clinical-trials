@@ -2,7 +2,7 @@ import React, { ReactNode, createContext, useContext, useMemo, useState } from '
 import { StateType } from '../types/context.type';
 
 const defaultState: StateType = {
-  input: 'test',
+  input: '',
   searchTermsArray: [],
   cachedId: [],
   inputDelete: false,
