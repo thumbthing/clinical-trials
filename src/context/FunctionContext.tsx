@@ -2,7 +2,7 @@ import React, { ChangeEvent, ReactNode, createContext, useContext, useMemo } fro
 import { FunctionType, SickArray } from '../types/context.type';
 import handleError from '../utils/errorHandler';
 import { getSearchTerms } from '../api/client';
-import sessionHandler from '../utils/sessionHandler';
+import { sessionHandler } from '../utils/sessionHandler';
 
 const changeInput = (event: ChangeEvent<HTMLInputElement>): Promise<string> => {
   return new Promise((resolve) => {
