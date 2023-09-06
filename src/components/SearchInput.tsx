@@ -55,9 +55,6 @@ function SearchInput() {
 
   useEffect(() => {
     setTimeout(() => deleteOldTerm(), 10000);
-    console.log('================');
-    console.log('cachedId data : ', state.cachedId);
-    console.log('cachedId length : ', state.cachedId.length);
   }, [state.cachedId]);
 
   return (
