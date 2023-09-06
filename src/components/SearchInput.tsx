@@ -1,32 +1,53 @@
-import React, { ChangeEvent, useEffect } from 'react';
+import React, { ChangeEvent, useCallback, useEffect } from 'react';
 import { SearchContext } from '../context/SearchContext';
 import { SearchFunctionContext } from '../context/FunctionContext';
+import handleError from '../utils/errorHandler';
+import debounceFunction from '../utils/debounce';
 
 function SearchInput() {
-  const { input, searchTermsArray, cachedId, inputDelete } = SearchContext();
+  const { state, setState } = SearchContext();
   const { changeInput, getTerm, addToSessionStorage, deleteOldSession } = SearchFunctionContext();
 
   // test 용 hook
 
-  useEffect(() => {
-    console.log(input);
-    console.log(searchTermsArray);
-    console.log(cachedId);
-    console.log(inputDelete);
-    deleteOldSession();
+  const getTermAndAddToCacheStorage = async (text: string) => {
+    try {
+      const dataFromDb = await getTerm(text);
+      addToSessionStorage(text, dataFromDb);
+    } catch (error) {
+      handleError(error);
+    }
+  };
+
+  const handleChangeInput = async (e: ChangeEvent<HTMLInputElement>) => {
+    try {
+      const debouncedChangeInput = debounceFunction(changeInput, 500);
+      const text = await debouncedChangeInput(e);
+      if (text) {
+        setState((prevState) => ({ ...prevState, input: text }));
+        await getTermAndAddToCacheStorage(text);
+      }
+      console.log('input : asdfaiuosfbivae', state.input);
+
+      console.log('just for testing', getTermAndAddToCacheStorage('asdf'));
+      console.log('just for testing', setState);
+    } catch (error) {
+      handleError(error);
+    }
+  };
+
+  const addCachedId = useCallback(() => {
+    // cachedId.push(input);
+    return null;
   }, []);
 
-  const handleChangeInput = (e: ChangeEvent<HTMLInputElement>) => {
-    const text = changeInput(e);
-    console.log(text);
-  };
+  useEffect(() => {
+    console.log(state.input);
 
-  const testText = '장';
+    console.log(addCachedId);
 
-  const getTermAndAddToCacheStorage = async () => {
-    const dataFromDb = await getTerm(testText);
-    addToSessionStorage(testText, dataFromDb);
-  };
+    deleteOldSession();
+  }, [state]);
 
   return (
     <>
@@ -39,9 +60,6 @@ function SearchInput() {
       <div>
         <h1>test container</h1>
         <input onChange={handleChangeInput} type="text" />
-        <button type="button" onClick={getTermAndAddToCacheStorage}>
-          test button
-        </button>
       </div>
     </>
   );
