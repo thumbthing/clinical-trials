@@ -1,19 +1,25 @@
-import React, { ChangeEvent, useCallback, useEffect } from 'react';
+import React, { ChangeEvent, useEffect } from 'react';
 import { SearchContext } from '../context/SearchContext';
 import { SearchFunctionContext } from '../context/FunctionContext';
 import handleError from '../utils/errorHandler';
 import debounceFunction from '../utils/debounce';
+import checkInputValid from '../utils/checkInputTextValid';
 
 function SearchInput() {
   const { state, setState } = SearchContext();
   const { changeInput, getTerm, addToSessionStorage, deleteOldSession } = SearchFunctionContext();
 
-  // test 용 hook
-
   const getTermAndAddToCacheStorage = async (text: string) => {
     try {
       const dataFromDb = await getTerm(text);
-      addToSessionStorage(text, dataFromDb);
+      const checkCachedId = !state.cachedId.includes(text);
+      const checkDataLength = dataFromDb.length !== 0;
+
+      if (checkCachedId && checkDataLength) {
+        addToSessionStorage(text, dataFromDb);
+        const newCachedArray = [...state.cachedId, text];
+        setState((prevState) => ({ ...prevState, cachedId: newCachedArray }));
+      }
     } catch (error) {
       handleError(error);
     }
@@ -21,33 +27,26 @@ function SearchInput() {
 
   const handleChangeInput = async (e: ChangeEvent<HTMLInputElement>) => {
     try {
-      const debouncedChangeInput = debounceFunction(changeInput, 500);
+      const debouncedChangeInput = debounceFunction(changeInput, 1000);
       const text = await debouncedChangeInput(e);
-      if (text) {
-        setState((prevState) => ({ ...prevState, input: text }));
+      const formatedText = text.trim();
+      const inputValid = checkInputValid(formatedText);
+      if (formatedText && inputValid) {
+        setState((prevState) => ({ ...prevState, input: formatedText }));
         await getTermAndAddToCacheStorage(text);
       }
-      console.log('input : asdfaiuosfbivae', state.input);
-
-      console.log('just for testing', getTermAndAddToCacheStorage('asdf'));
-      console.log('just for testing', setState);
     } catch (error) {
       handleError(error);
     }
   };
 
-  const addCachedId = useCallback(() => {
-    // cachedId.push(input);
-    return null;
-  }, []);
-
-  useEffect(() => {
+  const addCachedId = useEffect(() => {
     console.log(state.input);
 
     console.log(addCachedId);
 
     deleteOldSession();
-  }, [state]);
+  }, [state.cachedId]);
 
   return (
     <>
