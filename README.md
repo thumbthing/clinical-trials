@@ -67,6 +67,7 @@ npm start
 ---
 
 ### UI
+- 키보드 만으로 추천 검색어로 이동가능 하도록 구현
 
 ```javascript
 
@@ -75,6 +76,7 @@ npm start
 ---
 
 ### API
+입력마다 API 호출하지 않도록 횟수 줄이는 전략 및 실행
 
 ```javascript
 
@@ -85,7 +87,173 @@ npm start
 ### Caching
 
 ```javascript
+// Function Context
+
+const changeInput = (event: ChangeEvent<HTMLInputElement>): Promise<string> => {
+  ...
+};
+
+const getTerm = async (searchText: string) => {
+  ...
+};
+
+const addToSessionStorage = async (searchText: string, reponseData: SickArray[]) => {
+  try {
+    await sessionHandler(searchText, reponseData);
+  } catch (error) {
+    handleError(error);
+  }
+};
+
+const deleteOldSession = async (key: string) => {
+  try {
+    await sessionStorage.removeItem(key);
+  } catch (error) {
+    handleError(error);
+  }
+};
+
+const defaultFunction: FunctionType = {
+  ...
+};
+
+const FunctionProviderContext = createContext<FunctionType>(defaultFunction);
+export const SearchFunctionContext = () => useContext(FunctionProviderContext);
+
+export function FunctionContext({ children }: { children: ReactNode }) {
+  const MemorizedFunction = useMemo<FunctionType>(() => {
+    return defaultFunction;
+  }, []);
+
+  return <FunctionProviderContext.Provider value={MemorizedFunction}>{children}</FunctionProviderContext.Provider>;
+}
+```
+
+```javascript
+// State Context
+
+const defaultState: StateType = {
+  ...
+};
+
+const StateContext = createContext<
+  | {
+      state: StateType;
+      setState: React.Dispatch<React.SetStateAction<StateType>>;
+    }
+  | undefined
+>(undefined);
+
+export const SearchContext = () => {
+ ...
+};
+
+export function SearchProvider({ children }: { children: ReactNode }) {
+  const [state, setState] = useState<StateType>(defaultState);
+  const memorizedState = useMemo(() => ({ state, setState }), [state]);
+
+  return <StateContext.Provider value={memorizedState}>{children}</StateContext.Provider>;
+}
+```
+
+```javascript
+// page
+function SearchPage() {
+  return (
+    <SearchProvider>
+      <FunctionContext>
+        <div>
+          <SearchInput />
+          <SuggestedSearchTermList />
+        </div>
+      </FunctionContext>
+    </SearchProvider>
+  );
+}
+```
+```javascript
+// sessionHandler
+const sessionHandler = async (inputText: string, termResult: SickArray[]) => {
+  try {
+    const serializedData = JSON.stringify(termResult);
+    sessionStorage.setItem(inputText, serializedData);
+  } catch (error) {
+    handleError(error);
+  }
+};
+
+export default sessionHandler;
+```
+
+- Context를 `State`, `Function`으로 관심사를 분리하여 구성
+- `Function Context`로 관리되는 함수(`getTerm`, `addToSessionStorage`, `deleteOldSession`)을 context를 활용하는 `Component`에서 비동기로 실행
+- `Session Storage`에 데이터를 저장하기 위해 포멧팅하는 기능은 관심사 분리를 통해 별도의 파일에 구현
+
+```javascript
+// input component
+
+function SearchInput() {
+  const { state, setState } = SearchContext();
+  const { changeInput, getTerm, addToSessionStorage, deleteOldSession } = SearchFunctionContext();
+
+  const getTermAndAddToSessionStorage = async (text: string) => {
+    try {
+      const dataFromDb = await getTerm(text);
+      const checkCachedId = !state.cachedId.includes(text);
+      const checkDataLength = dataFromDb.length !== 0;
+
+      if (checkCachedId && checkDataLength) {
+        addToSessionStorage(text, dataFromDb);
+        const newCachedArray = [...state.cachedId, text];
+        setState((prevState) => ({ ...prevState, cachedId: newCachedArray }));
+      }
+    } catch (error) {
+      handleError(error);
+    }
+  };
+
+  const handleChangeInput = async (e: ChangeEvent<HTMLInputElement>) => {
+    ...
+     if (formatedText && inputValid) {
+        setState((prevState) => ({ ...prevState, input: formatedText }));
+        await getTermAndAddToSessionStorage(text);
+      }    
+  };
+
+  const deleteOldTerm = useCallback(async () => {
+    try {
+      const OLD_KEY: string | undefined = state.cachedId.shift();
+      if (OLD_KEY) {
+        await deleteOldSession(OLD_KEY);
+        const newCacheId: string[] = state.cachedId.filter((key) => key !== OLD_KEY);
+        setState((prevState) => ({ ...prevState, cachedId: newCacheId }));
+      }
+    } catch (error) {
+      handleError(error);
+    }
+  }, [state.cachedId]);
+
+  useEffect(() => {
+    setTimeout(() => deleteOldTerm(), 10000);
+  }, [state.cachedId]);
+
+  return (
+    <div>
+      <button type="button">뒤로가기</button>
+      <input type="text" onChange={handleChangeInput} placeholder="검색창" />
+      <button type="button">input 창 삭제</button>
+      <button type="submit">검색하기</button>
+    </div>
+  );
+}
+
+export default SearchInput;
 
 ```
+
+- DB로부터 받은 값의 `valid`를 판별하여 (response의 길이, 중복된 검색기록) `Function Context`로 관리되는 함수들을 활용하여 캐싱하는 `getTermAndAddToSessionStorage` 구현
+- `handleChangeInput` 함수 내에서 `input`의 value 값의 `valid`를 판별하여 (빈값, 자음-모음만 존재)`getTermAndAddToSessionStorage`의 실행 여부를 결정
+- `deleteOldTerm`를 선언하여 `state`로 관리되고 있는 과거 검색 기록의 첫번째 요소를 활용하여 `Session Storage`와 `state`를 변겅하는 함수를 선언
+- `useEffect`를 통해 캐싱된 검색기록의 `state` 배열을 변경-`Session Storage`에 존재하는 캐싱된 데이터를 일정시간 마다 삭제, dependency array의 변경을 감지하여 지속적으로 삭제하도록 구현
 
 ---
