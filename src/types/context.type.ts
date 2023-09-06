@@ -14,7 +14,7 @@ export type StateType = {
 
 export type FunctionType = {
   /* eslint-disable no-unused-vars */
-  changeInput: (event: ChangeEvent<HTMLInputElement>) => void;
+  changeInput: (event: ChangeEvent<HTMLInputElement>) => Promise<string>;
   /* eslint-disable no-unused-vars */
   getTerm: (searchText: string) => Promise<SickArray[]>;
   /* eslint-disable no-unused-vars */

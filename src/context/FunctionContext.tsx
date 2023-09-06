@@ -4,9 +4,11 @@ import handleError from '../utils/errorHandler';
 import { getSearchTerms } from '../api/client';
 import sessionHandler from '../utils/sessionHandler';
 
-const changeInput = (event: ChangeEvent<HTMLInputElement>) => {
-  const inputText = event.target.value;
-  return inputText;
+const changeInput = (event: ChangeEvent<HTMLInputElement>): Promise<string> => {
+  return new Promise((resolve) => {
+    const text = event.target.value;
+    resolve(text);
+  });
 };
 
 const getTerm = async (searchText: string) => {
