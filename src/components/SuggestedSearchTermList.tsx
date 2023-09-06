@@ -1,17 +1,40 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { SearchContext } from '../context/SearchContext';
+import { sessionParser } from '../utils/sessionHandler';
+import handleError from '../utils/errorHandler';
 
 function SuggestedSearchTermList() {
+  const { state, setState } = SearchContext();
+  const { input, searchTermsArray } = state;
+
+  const sessionDataList = async (inputText: string) => {
+    try {
+      const sessionData = await sessionParser(inputText);
+      if (sessionData) {
+        setState((prevState) => ({ ...prevState, searchTermsArray: sessionData }));
+        return null;
+      }
+      return null;
+    } catch (error) {
+      handleError(error);
+      return null;
+    }
+  };
+
+  useEffect(() => {
+    sessionDataList(input);
+  }, [input]);
+
   return (
     <div>
       <ul>
-        <li>
-          <div>추천 검색어</div>
-        </li>
-        <li>추천 검색어 1번</li>
-        <li>추천 검색어 2번</li>
-        <li>추천 검색어 3번</li>
-        <li>추천 검색어 4번</li>
-        <li>추천 검색어 5번</li>
+        {searchTermsArray.map((item) => (
+          <li key={item.sickCd}>
+            <div>
+              <span>{item.sickNm}</span>
+            </div>
+          </li>
+        ))}
       </ul>
     </div>
   );
