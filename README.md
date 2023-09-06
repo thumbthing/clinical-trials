@@ -76,11 +76,63 @@ npm start
 ---
 
 ### API
-입력마다 API 호출하지 않도록 횟수 줄이는 전략 및 실행
 
 ```javascript
+// debounce 
+import { ChangeEvent } from 'react';
+
+/* eslint-disable no-unused-vars */
+const debounceFunction = (callback: (args: ChangeEvent<HTMLInputElement>) => Promise<string>, delay: number) => {
+  let timer: ReturnType<typeof setTimeout>;
+
+  return (args: ChangeEvent<HTMLInputElement>) => {
+    return new Promise<string>((resolve) => {
+      clearTimeout(timer);
+      timer = setTimeout(async () => {
+        const result = await callback(args);
+        resolve(result);
+      }, delay);
+    });
+  };
+};
+
+export default debounceFunction;
+```
+
+```javascript
+// input value
+
+  const handleChangeInput = async (e: ChangeEvent<HTMLInputElement>) => {
+    try {
+      setState((prevState) => ({ ...prevState, input: e.target.value }));
+      const debouncedChangeInput = debounceFunction(changeInput, 1000);
+      const text = await debouncedChangeInput(e);
+      const formatedText = text.trim();
+      const inputValid = checkInputValid(formatedText);
+      if (formatedText && inputValid) {
+        await getTermAndAddToSessionStorage(text);
+      }
+    } catch (error) {
+      handleError(error);
+    }
+  };
 
 ```
+
+```javascript
+// changeInput
+const changeInput = (event: ChangeEvent<HTMLInputElement>): Promise<string> => {
+  return new Promise((resolve) => {
+    const text = event.target.value;
+    resolve(text);
+  });
+};
+
+```
+
+- 기존 함수를 `setTimeOut`의 `callback`로 전달하는 함수로 변형 시켜주는 `debounce` 함수 생성
+- `input` `change`시 `value` 값을 서버로 전달하는 과정을 delay 시켜서 즉각적인 변화를 제어
+- 기능 구현시 `return`을 원시 타입으로 지정 했으나 `setTimeout`의 지연 작동으로 인해 변수의 값 할당에서 지속적인 에러가 발생하여서 `Promise`를 `return`하도록 변경 후 `await`로 지연 작동을 헨들링
 
 ---
 
