@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { SearchContext } from '../context/SearchContext';
 import { sessionParser } from '../utils/sessionHandler';
 import handleError from '../utils/errorHandler';
+import { ListContainer, TermList, TermItem, SickName } from '../styles/SuggestedSearchTermList.style';
 
 function SuggestedSearchTermList() {
   const { state, setState } = SearchContext();
@@ -26,17 +27,17 @@ function SuggestedSearchTermList() {
   }, [input]);
 
   return (
-    <div>
-      <ul>
+    <ListContainer>
+      <TermList>
         {searchTermsArray.map((item) => (
-          <li key={item.sickCd}>
+          <TermItem key={item.sickCd}>
             <div>
-              <span>{item.sickNm}</span>
+              <SickName>{item.sickNm}</SickName>
             </div>
-          </li>
+          </TermItem>
         ))}
-      </ul>
-    </div>
+      </TermList>
+    </ListContainer>
   );
 }
 

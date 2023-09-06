@@ -4,6 +4,7 @@ import { SearchFunctionContext } from '../context/FunctionContext';
 import handleError from '../utils/errorHandler';
 import debounceFunction from '../utils/debounce';
 import checkInputValid from '../utils/checkInputTextValid';
+import { Button, Input, Container } from '../styles/SearchInput.style';
 
 function SearchInput() {
   const { state, setState } = SearchContext();
@@ -66,14 +67,14 @@ function SearchInput() {
   };
 
   return (
-    <div>
-      <button type="button">뒤로가기</button>
-      <input type="search" onChange={handleChangeInput} placeholder="검색창" value={state.input} />
-      <button type="button" onClick={resetInput}>
+    <Container>
+      <Button type="button">뒤로가기</Button>
+      <Input type="search" onChange={handleChangeInput} placeholder="검색창" value={state.input} />
+      <Button type="button" onClick={resetInput}>
         input 창 삭제
-      </button>
-      <button type="submit">검색하기</button>
-    </div>
+      </Button>
+      <Button type="submit">검색하기</Button>
+    </Container>
   );
 }
 
