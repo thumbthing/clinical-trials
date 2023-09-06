@@ -1,4 +1,4 @@
-import React, { ChangeEvent, useEffect } from 'react';
+import React, { ChangeEvent, useCallback, useEffect } from 'react';
 import { SearchContext } from '../context/SearchContext';
 import { SearchFunctionContext } from '../context/FunctionContext';
 import handleError from '../utils/errorHandler';
@@ -9,7 +9,7 @@ function SearchInput() {
   const { state, setState } = SearchContext();
   const { changeInput, getTerm, addToSessionStorage, deleteOldSession } = SearchFunctionContext();
 
-  const getTermAndAddToCacheStorage = async (text: string) => {
+  const getTermAndAddToSessionStorage = async (text: string) => {
     try {
       const dataFromDb = await getTerm(text);
       const checkCachedId = !state.cachedId.includes(text);
@@ -33,34 +33,40 @@ function SearchInput() {
       const inputValid = checkInputValid(formatedText);
       if (formatedText && inputValid) {
         setState((prevState) => ({ ...prevState, input: formatedText }));
-        await getTermAndAddToCacheStorage(text);
+        await getTermAndAddToSessionStorage(text);
       }
     } catch (error) {
       handleError(error);
     }
   };
 
-  const addCachedId = useEffect(() => {
-    console.log(state.input);
+  const deleteOldTerm = useCallback(async () => {
+    try {
+      const OLD_KEY: string | undefined = state.cachedId.shift();
+      if (OLD_KEY) {
+        await deleteOldSession(OLD_KEY);
+        const newCacheId: string[] = state.cachedId.filter((key) => key !== OLD_KEY);
+        setState((prevState) => ({ ...prevState, cachedId: newCacheId }));
+      }
+    } catch (error) {
+      handleError(error);
+    }
+  }, [state.cachedId]);
 
-    console.log(addCachedId);
-
-    deleteOldSession();
+  useEffect(() => {
+    setTimeout(() => deleteOldTerm(), 10000);
+    console.log('================');
+    console.log('cachedId data : ', state.cachedId);
+    console.log('cachedId length : ', state.cachedId.length);
   }, [state.cachedId]);
 
   return (
-    <>
-      <div>
-        <button type="button">뒤로가기</button>
-        <input type="text" placeholder="검색창" />
-        <button type="button">input 창 삭제</button>
-        <button type="submit">검색하기</button>
-      </div>
-      <div>
-        <h1>test container</h1>
-        <input onChange={handleChangeInput} type="text" />
-      </div>
-    </>
+    <div>
+      <button type="button">뒤로가기</button>
+      <input type="text" onChange={handleChangeInput} placeholder="검색창" />
+      <button type="button">input 창 삭제</button>
+      <button type="submit">검색하기</button>
+    </div>
   );
 }
 
