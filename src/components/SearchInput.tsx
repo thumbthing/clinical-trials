@@ -18,7 +18,7 @@ function SearchInput() {
       if (checkCachedId && checkDataLength) {
         addToSessionStorage(text, dataFromDb);
         const newCachedArray = [...state.cachedId, text];
-        setState((prevState) => ({ ...prevState, cachedId: newCachedArray }));
+        setState((prevState) => ({ ...prevState, cachedId: newCachedArray, searchTermsArray: dataFromDb }));
       }
     } catch (error) {
       handleError(error);
@@ -68,7 +68,7 @@ function SearchInput() {
   return (
     <div>
       <button type="button">뒤로가기</button>
-      <input type="text" onChange={handleChangeInput} placeholder="검색창" value={state.input} />
+      <input type="search" onChange={handleChangeInput} placeholder="검색창" value={state.input} />
       <button type="button" onClick={resetInput}>
         input 창 삭제
       </button>
