@@ -25,8 +25,6 @@ const getTerm = async (searchText: string) => {
   }
 };
 
-// 키값을 숫자로 해야 순서대로 지워야함
-
 const addToSessionStorage = async (searchText: string, reponseData: SickArray[]) => {
   try {
     await sessionHandler(searchText, reponseData);
@@ -35,15 +33,19 @@ const addToSessionStorage = async (searchText: string, reponseData: SickArray[])
   }
 };
 
-// delete 작성해야함
+const deleteOldSession = async (key: string) => {
+  try {
+    await sessionStorage.removeItem(key);
+  } catch (error) {
+    handleError(error);
+  }
+};
 
 const defaultFunction: FunctionType = {
   changeInput,
   getTerm,
   addToSessionStorage,
-  deleteOldSession: () => {
-    console.log('delete cache 작동');
-  },
+  deleteOldSession,
 };
 const FunctionProviderContext = createContext<FunctionType>(defaultFunction);
 export const SearchFunctionContext = () => useContext(FunctionProviderContext);
