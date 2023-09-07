@@ -2,6 +2,7 @@
 # clinical-trials
 
 ---
+
 ## 기능
 
 1. 검색 창 구현
@@ -30,6 +31,31 @@ npm start
 ## 프로젝트 구조
 
 ```shell
+├── App.tsx
+├── api
+│   └── client.ts
+├── components
+│   ├── SearchInput.tsx
+│   └── SuggestedSearchTermList.tsx
+├── context
+│   ├── FunctionContext.tsx
+│   └── SearchContext.tsx
+├── index.tsx
+├── pages
+│   └── SearchPage.tsx
+├── react-app-env.d.ts
+├── reportWebVitals.ts
+├── setupTests.ts
+├── styles
+│   ├── SearchInput.style.ts
+│   └── SuggestedSearchTermList.style.ts
+├── types
+│   └── context.type.ts
+└── utils
+    ├── checkInputTextValid.ts
+    ├── debounce.ts
+    ├── errorHandler.ts
+    └── sessionHandler.ts
 
 ```
 
@@ -55,6 +81,7 @@ npm start
 ---
 
 ### 사용 라이브러리
+
 - React
 - Typescript
 - eslint
@@ -67,11 +94,145 @@ npm start
 ---
 
 ### UI
-- 키보드 만으로 추천 검색어로 이동가능 하도록 구현
+
+- 방향키로 연관 검색어 선택
 
 ```javascript
+// input component
+  const ArrowKeyHandle = (e: React.KeyboardEvent) => {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      e.stopPropagation();
+      const isSuggestedTermExist = state.searchTermsArray.length !== 0;
+      if (isSuggestedTermExist) {
+        setState((prevState) => ({
+          ...prevState,
+          isSelectingSuggestedTerms: true,
+        }));
+      }
+    }
+  };
+```
+
+```javascript
+// suggested Term List component
+const { state, setState } = SearchContext();
+  const { input, searchTermsArray, selectedItemIndex, isSelectingSuggestedTerms } = state;
+
+  const listRef = useRef<HTMLUListElement | null>(null);
+  const focusRef = useRef<HTMLLIElement | null>(null);
+
+  useEffect(() => {
+    if (isSelectingSuggestedTerms && selectedItemIndex === -1) {
+      setState((prev) => ({ ...prev, selectedItemIndex: 0 }));
+    }
+  }, [isSelectingSuggestedTerms]);
+
+  const KeyEventAction: KeyEventActiontType = {
+    ArrowDown: () => {
+      if (searchTermsArray.length === 0 || listRef.current === null) {
+        return null;
+      }
+      if (listRef.current.childElementCount === selectedItemIndex + 1) {
+        setState((prevState) => ({
+          ...prevState,
+          selectedItemIndex: 0,
+        }));
+      }
+      if (selectedItemIndex === -1) {
+        setState((prevState) => ({
+          ...prevState,
+          selectedItemIndex: 0,
+        }));
+      } else {
+        setState((prevState) => ({
+          ...prevState,
+          selectedItemIndex: selectedItemIndex + 1,
+        }));
+      }
+      return null;
+    },
+    ArrowUp: () => {
+      if (selectedItemIndex <= 0) {
+        setState((prevState) => ({
+          ...prevState,
+          isSelectingSuggestedTerms: false,
+          selectedItemIndex: -1,
+        }));
+      } else {
+        setState((prevState) => ({
+          ...prevState,
+          selectedItemIndex: prevState.selectedItemIndex - 1,
+        }));
+      }
+      return null;
+    },
+    Escape: () => {
+      setState((prevState) => ({
+        ...prevState,
+        isSelectingSuggestedTerms: false,
+        selectedItemIndex: -1,
+      }));
+    },
+    Enter: () => {
+      setState((prevState) => ({
+        ...prevState,
+        isSelectingSuggestedTerms: false,
+        selectedItemIndex: -1,
+      }));
+    },
+  };
+
+  const handleKeyUP = (e: React.KeyboardEvent) => {
+    e.preventDefault();
+    const keyInserted = e.key as KeyEventType;
+
+    if (KeyEventAction[keyInserted]) {
+      KeyEventAction[keyInserted]();
+    }
+    return null;
+  };
+
+  useEffect(() => {
+    if (focusRef?.current) {
+      focusRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      focusRef.current.focus();
+    }
+    if (selectedItemIndex <= -1) {
+      focusRef.current?.blur();
+    }
+  }, [selectedItemIndex]);
+
+  ...
+    return (
+    <ListContainer>
+      <TermList ref={listRef}>
+        {searchTermsArray.map((item, index) => (
+          <TermItem
+            key={item.sickCd}
+            tabIndex={0}
+            ref={index === selectedItemIndex ? focusRef : null}
+            onKeyUp={(e) => handleKeyUP(e)}
+          >
+            {index} : {item.sickNm}
+          </TermItem>
+        ))}
+      </TermList>
+    </ListContainer>
+  );
 
 ```
+
+1. `input component`
+
+- `input` 컴포넌트에서 검색어 입력 후 방향키`ArrowDown` 입력시 연관 검색어 리스트로 포커싱 이동
+- 검색 목록이 존재하지 않을 경우 `input`에서 `ArrowDown` 입력을 무시
+
+2. `Searched term list component`
+
+- `ArrowDown` `ArrowUp` `Escape` `Enter`의 키보드 입력을 감지해서 `selectedItemIndex`와 `isSelectingSuggestedTerms`의 state를 관리
+- `state`로 관리되고 있는 `selectedItemIndex`를 참조하여 `ref`를 list에 추가
+- 포커싱이 list의 최상단 이상으로 이동하려고 할때 list의 포커싱을 해제
 
 ---
 
@@ -223,6 +384,7 @@ function SearchPage() {
   );
 }
 ```
+
 ```javascript
 // sessionHandler
 const sessionHandler = async (inputText: string, termResult: SickArray[]) => {
@@ -304,8 +466,151 @@ export default SearchInput;
 ```
 
 - DB로부터 받은 값의 `valid`를 판별하여 (response의 길이, 중복된 검색기록) `Function Context`로 관리되는 함수들을 활용하여 캐싱하는 `getTermAndAddToSessionStorage` 구현
-- `handleChangeInput` 함수 내에서 `input`의 value 값의 `valid`를 판별하여 (빈값, 자음-모음만 존재)`getTermAndAddToSessionStorage`의 실행 여부를 결정
-- `deleteOldTerm`를 선언하여 `state`로 관리되고 있는 과거 검색 기록의 첫번째 요소를 활용하여 `Session Storage`와 `state`를 변겅하는 함수를 선언
-- `useEffect`를 통해 캐싱된 검색기록의 `state` 배열을 변경-`Session Storage`에 존재하는 캐싱된 데이터를 일정시간 마다 삭제, dependency array의 변경을 감지하여 지속적으로 삭제하도록 구현
+
+- `getTermAndAddToSessionStorage`: (`state`와 `SessionStorage`에 데이터를 저장)
+  - db로 데이터를 요청
+  - db 요청에 사용된 param으로 기존에 검색 기록`state(cachedId)`이 존재하는지 검사
+  - db에서 받은 데이터가 유효한지 검사
+  - 두개의 조건을 충족할때 데이터를 `SessionStorage`와 `state`에, param을 `state(cachedId)` 에 저장
+
+- `deleteOldTerm`: (`state`와 `SessionStorage`에 데이터를 삭제)
+  - `state(cachedId)`의 첫번째 요소를 확인
+  - 추출된 요소를 활용하여 `SessionStorage`에서 삭제
+  - 추출된 요소를 `filter()`하여 생성한 새로울 배열을 활용하여 `state(cachedId)`를 최신화
+  - `useEffect`와 `setTimeout`을 활용하여 `deleteOldTerm`을 일정한 시간으로 호출
+
+- `handleChangeInput`:
+  - 함수 내에서 `input`의 value 값의 `valid`를 판별하여 (빈값, 자음-모음만 존재)`getTermAndAddToSessionStorage`의 실행 여부를 결정
 
 ---
+
+### Context
+
+```javascript
+// State Context
+
+import React, { ReactNode, createContext, useContext, useMemo, useState } from 'react';
+import { StateType } from '../types/context.type';
+
+const defaultState: StateType = {
+  input: '',
+  searchTermsArray: [],
+  cachedId: [],
+  inputDelete: false,
+  selectedItemIndex: -1,
+  isSelectingSuggestedTerms: false,
+};
+
+const StateContext = createContext<
+  | {
+      state: StateType;
+      setState: React.Dispatch<React.SetStateAction<StateType>>;
+    }
+  | undefined
+>(undefined);
+
+export const SearchContext = () => {
+  const context = useContext(StateContext);
+  if (context === undefined) {
+    throw new Error('useSearch must be used within a SearchProvider');
+  }
+  return context;
+};
+
+export function SearchProvider({ children }: { children: ReactNode }) {
+  const [state, setState] = useState<StateType>(defaultState);
+  const memorizedState = useMemo(() => ({ state, setState }), [state]);
+
+  return <StateContext.Provider value={memorizedState}>{children}</StateContext.Provider>;
+}
+
+```
+
+```javascript
+// State Context
+import React, { ChangeEvent, ReactNode, createContext, useContext, useMemo } from 'react';
+import { FunctionType, SickArray } from '../types/context.type';
+import handleError from '../utils/errorHandler';
+import { getSearchTerms } from '../api/client';
+import { sessionHandler } from '../utils/sessionHandler';
+
+const changeInput = (event: ChangeEvent<HTMLInputElement>): Promise<string> => {
+  return new Promise((resolve) => {
+    const text = event.target.value;
+    resolve(text);
+  });
+};
+
+const getTerm = async (searchText: string) => {
+  try {
+    const response = await getSearchTerms(searchText);
+    if (response?.status !== 200) {
+      throw new Error('fail to get term');
+    }
+    const result = response?.data;
+    return result;
+  } catch (error) {
+    handleError(error);
+    return null;
+  }
+};
+
+const addToSessionStorage = async (searchText: string, reponseData: SickArray[]) => {
+  try {
+    await sessionHandler(searchText, reponseData);
+  } catch (error) {
+    handleError(error);
+  }
+};
+
+const deleteOldSession = async (key: string) => {
+  try {
+    await sessionStorage.removeItem(key);
+  } catch (error) {
+    handleError(error);
+  }
+};
+
+const defaultFunction: FunctionType = {
+  changeInput,
+  getTerm,
+  addToSessionStorage,
+  deleteOldSession,
+};
+const FunctionProviderContext = createContext<FunctionType>(defaultFunction);
+export const SearchFunctionContext = () => useContext(FunctionProviderContext);
+
+export function FunctionContext({ children }: { children: ReactNode }) {
+  const MemorizedFunction = useMemo<FunctionType>(() => {
+    return defaultFunction;
+  }, []);
+
+  return <FunctionProviderContext.Provider value={MemorizedFunction}>{children}</FunctionProviderContext.Provider>;
+}
+
+```
+
+### `component`에서 공통으로 사용될 `state`와 `function`이 관심사를 분리
+
+---
+
+#### `state context`
+
+공통적인 데이터를 선언후 `Child Component`들에서 공유  
+
+>  - `input`, `searchTermsArray`, `cachedId`, `inputDelete`, `selectedItemIndex`, `isSelectingSuggestedTerms`
+
+---
+
+#### `function context`
+
+ `Child Component`에서 공통적으로 사용될 DB의 I/O 와 브라우저 cache의 I/O 선언
+
+>  - `changeInput: (event: ChangeEvent<HTMLInputElement>) => Promise<string>;`
+>    - 직접 호출해서 사용하지 않고 `debounce`의 `callback`의 요소로 활용
+>    - 지연작동을 헨들링하기 위해 return을 `Promise`로 설정
+>  - `getTerm: (searchText: string) => Promise<SickArray[]>;`
+>    - DB의 직접적인 I/O 기능을 선언
+>  - `addToSessionStorage: (searchText: string, responseData: SickArray[]) => Promise<void>;`
+>  - `deleteOldSession: (key: string) => void;`
+>    - 브라우저의 직접적인 Caching I/O 기능을 선언
