@@ -66,10 +66,27 @@ function SearchInput() {
     }
   };
 
+  // 브라우저 이벤트 해제
+  const ArrowKeyHandle = (e: React.KeyboardEvent) => {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setState((prevState) => ({
+        ...prevState,
+        isSelectingSuggestedTerms: true,
+      }));
+    }
+  };
+
   return (
     <Container>
       <Button type="button">뒤로가기</Button>
-      <Input type="search" onChange={handleChangeInput} placeholder="검색창" value={state.input} />
+      <Input
+        type="search"
+        onChange={handleChangeInput}
+        onKeyDown={(e) => ArrowKeyHandle(e)}
+        placeholder="검색창"
+        value={state.input}
+      />
       <Button type="button" onClick={resetInput}>
         input 창 삭제
       </Button>
