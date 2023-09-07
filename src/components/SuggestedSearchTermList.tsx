@@ -21,10 +21,8 @@ function SuggestedSearchTermList() {
   const focusRef = useRef<HTMLLIElement | null>(null);
 
   useEffect(() => {
-    if (isSelectingSuggestedTerms) {
+    if (isSelectingSuggestedTerms && selectedItemIndex === -1) {
       setState((prev) => ({ ...prev, selectedItemIndex: 0 }));
-    } else {
-      setState((prev) => ({ ...prev, selectedItemIndex: -1 }));
     }
   }, [isSelectingSuggestedTerms]);
 
@@ -39,15 +37,15 @@ function SuggestedSearchTermList() {
           selectedItemIndex: 0,
         }));
       }
-      if (isSelectingSuggestedTerms) {
+      if (selectedItemIndex === -1) {
         setState((prevState) => ({
           ...prevState,
-          selectedItemIndex: selectedItemIndex + 1,
+          selectedItemIndex: 0,
         }));
       } else {
         setState((prevState) => ({
           ...prevState,
-          selectedItemIndex: -1,
+          selectedItemIndex: selectedItemIndex + 1,
         }));
       }
       return null;
@@ -100,10 +98,6 @@ function SuggestedSearchTermList() {
       focusRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
       focusRef.current.focus();
     }
-    console.log('focusRef :', focusRef.current);
-
-    console.log('index: ', selectedItemIndex);
-    console.log('isSelecting: ', isSelectingSuggestedTerms);
   }, [selectedItemIndex]);
 
   const sessionDataList = async (inputText: string) => {
@@ -127,7 +121,6 @@ function SuggestedSearchTermList() {
   return (
     <ListContainer>
       <TermList ref={listRef}>
-        <TermItem key="연관 검색어">연관 검색어</TermItem>
         {searchTermsArray.map((item, index) => (
           <TermItem
             key={item.sickCd}
