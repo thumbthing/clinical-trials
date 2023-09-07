@@ -115,13 +115,15 @@ function SuggestedSearchTermList() {
     }
   };
 
+  const isInputEmpty = input === '';
+
   useEffect(() => {
     sessionDataList(input);
   }, [input]);
 
   return (
     <ListContainer>
-      <TermList ref={listRef}>
+      <TermList ref={listRef} style={{ display: isInputEmpty ? 'none' : 'block' }}>
         {searchTermsArray.map((item, index) => (
           <TermItem
             key={item.sickCd}
