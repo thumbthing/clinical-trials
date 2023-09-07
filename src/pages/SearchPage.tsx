@@ -1,6 +1,5 @@
 import React, { useEffect } from 'react';
 import SearchInput from '../components/SearchInput';
-import SuggestedSearchTermList from '../components/SuggestedSearchTermList';
 import { SearchProvider } from '../context/SearchContext';
 import { FunctionContext } from '../context/FunctionContext';
 import { SearchContainer } from '../styles/SearchInput.style';
@@ -16,7 +15,6 @@ function SearchPage() {
       <FunctionContext>
         <SearchContainer>
           <SearchInput />
-          <SuggestedSearchTermList />
         </SearchContainer>
       </FunctionContext>
     </SearchProvider>

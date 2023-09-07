@@ -5,22 +5,24 @@ import handleError from '../utils/errorHandler';
 import debounceFunction from '../utils/debounce';
 import checkInputValid from '../utils/checkInputTextValid';
 import { Button, Input, Container } from '../styles/SearchInput.style';
+import SuggestedSearchTermList from './SuggestedSearchTermList';
 
 function SearchInput() {
   const { state, setState } = SearchContext();
   const { changeInput, getTerm, addToSessionStorage, deleteOldSession } = SearchFunctionContext();
+  const { input, searchTermsArray, cachedId, inputDelete, selectedItemIndex, isSelectingSuggestedTerms } = state;
 
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   const getTermAndAddToSessionStorage = async (text: string) => {
     try {
       const dataFromDb = await getTerm(text);
-      const checkCachedId = !state.cachedId.includes(text);
+      const checkCachedId = !cachedId.includes(text);
       const checkDataLength = dataFromDb.length !== 0;
 
       if (checkCachedId && checkDataLength) {
         addToSessionStorage(text, dataFromDb);
-        const newCachedArray = [...state.cachedId, text];
+        const newCachedArray = [...cachedId, text];
         setState((prevState) => ({ ...prevState, cachedId: newCachedArray, searchTermsArray: dataFromDb }));
       }
     } catch (error) {
@@ -45,20 +47,16 @@ function SearchInput() {
 
   const deleteOldTerm = useCallback(async () => {
     try {
-      const OLD_KEY: string | undefined = state.cachedId.shift();
+      const OLD_KEY: string | undefined = cachedId.shift();
       if (OLD_KEY) {
         await deleteOldSession(OLD_KEY);
-        const newCacheId: string[] = state.cachedId.filter((key) => key !== OLD_KEY);
+        const newCacheId: string[] = cachedId.filter((key) => key !== OLD_KEY);
         setState((prevState) => ({ ...prevState, cachedId: newCacheId }));
       }
     } catch (error) {
       handleError(error);
     }
-  }, [state.cachedId]);
-
-  useEffect(() => {
-    setTimeout(() => deleteOldTerm(), 100000000);
-  }, [state.cachedId]);
+  }, [cachedId]);
 
   const resetInput = async () => {
     try {
@@ -68,12 +66,16 @@ function SearchInput() {
     }
   };
 
+  useEffect(() => {
+    setTimeout(() => deleteOldTerm(), 100000000);
+  }, [cachedId]);
+
   // 브라우저 이벤트 해제
   const ArrowKeyHandle = (e: React.KeyboardEvent) => {
     if (e.key === 'ArrowDown') {
       e.preventDefault();
       e.stopPropagation();
-      const isSuggestedTermExist = state.searchTermsArray.length !== 0;
+      const isSuggestedTermExist = searchTermsArray.length !== 0;
       if (isSuggestedTermExist) {
         setState((prevState) => ({
           ...prevState,
@@ -84,34 +86,39 @@ function SearchInput() {
   };
 
   useEffect(() => {
-    if (state.isSelectingSuggestedTerms === false) {
+    if (isSelectingSuggestedTerms === false) {
       inputRef?.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       inputRef?.current?.focus();
     }
-  }, [state.isSelectingSuggestedTerms, state.selectedItemIndex]);
+  }, [isSelectingSuggestedTerms, selectedItemIndex]);
+
   // 확인용 콘솔
 
   useEffect(() => {
     console.log('========console.log start============');
-    console.log('input                     : \n', state.input);
-    console.log('searchTemrsArray          : \n', state.searchTermsArray);
-    console.log('cachedId                  : \n', state.cachedId);
-    console.log('inputDelete               : \n', state.inputDelete);
-    console.log('selectedItemIndex         : \n', state.selectedItemIndex);
-    console.log('isSelectingSuggestedTerms : \n', state.isSelectingSuggestedTerms);
+    console.log('input                     : \n', input);
+    console.log('searchTemrsArray          : \n', searchTermsArray);
+    console.log('cachedId                  : \n', cachedId);
+    console.log('inputDelete               : \n', inputDelete);
+    console.log('selectedItemIndex         : \n', selectedItemIndex);
+    console.log('isSelectingSuggestedTerms : \n', isSelectingSuggestedTerms);
     console.log('=========console.log end===========');
   }, [state]);
+
   return (
     <Container>
       <Button type="button">{`<-`}</Button>
-      <Input
-        type="search"
-        ref={state.isSelectingSuggestedTerms === false ? inputRef : null}
-        onChange={handleChangeInput}
-        onKeyDown={(e) => ArrowKeyHandle(e)}
-        placeholder="검색창"
-        value={state.input}
-      />
+      <div>
+        <Input
+          type="search"
+          ref={isSelectingSuggestedTerms === false ? inputRef : null}
+          onChange={handleChangeInput}
+          onKeyDown={(e) => ArrowKeyHandle(e)}
+          placeholder="검색창"
+          value={input}
+        />
+        <SuggestedSearchTermList />
+      </div>
       <Button type="button" onClick={resetInput}>
         x
       </Button>
