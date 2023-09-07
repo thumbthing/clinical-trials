@@ -1,12 +1,110 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { SearchContext } from '../context/SearchContext';
 import { sessionParser } from '../utils/sessionHandler';
 import handleError from '../utils/errorHandler';
-import { ListContainer, TermList, TermItem, SickName } from '../styles/SuggestedSearchTermList.style';
+import { ListContainer, TermList, TermItem } from '../styles/SuggestedSearchTermList.style';
+
+type KeyEventActiontType = {
+  ArrowDown: () => void;
+  ArrowUp: () => void;
+  Escape: () => void;
+  Enter: () => void;
+};
+
+type KeyEventType = 'ArrowDown' | 'ArrowUp' | 'Escape' | 'Enter';
 
 function SuggestedSearchTermList() {
   const { state, setState } = SearchContext();
-  const { input, searchTermsArray } = state;
+  const { input, searchTermsArray, selectedItemIndex, isSelectingSuggestedTerms } = state;
+
+  const listRef = useRef<HTMLUListElement | null>(null);
+  const focusRef = useRef<HTMLLIElement | null>(null);
+
+  useEffect(() => {
+    if (isSelectingSuggestedTerms) {
+      setState((prev) => ({ ...prev, selectedItemIndex: 0 }));
+    } else {
+      setState((prev) => ({ ...prev, selectedItemIndex: -1 }));
+    }
+  }, [isSelectingSuggestedTerms]);
+
+  const KeyEventAction: KeyEventActiontType = {
+    ArrowDown: () => {
+      if (searchTermsArray.length === 0 || listRef.current === null) {
+        return null;
+      }
+      if (listRef.current.childElementCount === selectedItemIndex + 1) {
+        setState((prevState) => ({
+          ...prevState,
+          selectedItemIndex: 0,
+        }));
+      }
+      if (isSelectingSuggestedTerms) {
+        setState((prevState) => ({
+          ...prevState,
+          selectedItemIndex: selectedItemIndex + 1,
+        }));
+      } else {
+        setState((prevState) => ({
+          ...prevState,
+          selectedItemIndex: -1,
+        }));
+      }
+      return null;
+    },
+    ArrowUp: () => {
+      if (selectedItemIndex === -1) {
+        return null;
+      }
+      if (selectedItemIndex === 0) {
+        setState((prevState) => ({
+          ...prevState,
+          selectedItemIndex: prevState.selectedItemIndex - 1,
+        }));
+        return null;
+      }
+      setState((prevState) => ({
+        ...prevState,
+        selectedItemIndex: prevState.selectedItemIndex - 1,
+      }));
+      return null;
+    },
+    Escape: () => {
+      setState((prevState) => ({
+        ...prevState,
+        isSelectingSuggestedTerms: false,
+      }));
+    },
+    Enter: () => {
+      setState((prevState) => ({
+        ...prevState,
+        isSelectingSuggestedTerms: false,
+        selectedItemIndex: -1,
+      }));
+    },
+  };
+
+  const handleKeyUP = (e: React.KeyboardEvent) => {
+    e.preventDefault();
+    const keyInserted = e.key as KeyEventType;
+    console.log('check key inserted', keyInserted);
+
+    if (KeyEventAction[keyInserted]) {
+      KeyEventAction[keyInserted]();
+    }
+    return null;
+  };
+
+  useEffect(() => {
+    if (focusRef?.current) {
+      focusRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      focusRef.current.focus();
+    }
+    console.log('focusRef :', focusRef.current);
+
+    console.log('index: ', selectedItemIndex);
+    console.log('isSelecting: ', isSelectingSuggestedTerms);
+  }, [selectedItemIndex]);
 
   const sessionDataList = async (inputText: string) => {
     try {
@@ -28,12 +126,16 @@ function SuggestedSearchTermList() {
 
   return (
     <ListContainer>
-      <TermList>
-        {searchTermsArray.map((item) => (
-          <TermItem key={item.sickCd}>
-            <div>
-              <SickName>{item.sickNm}</SickName>
-            </div>
+      <TermList ref={listRef}>
+        <TermItem key="연관 검색어">연관 검색어</TermItem>
+        {searchTermsArray.map((item, index) => (
+          <TermItem
+            key={item.sickCd}
+            tabIndex={0}
+            ref={index === selectedItemIndex ? focusRef : null}
+            onKeyUp={(e) => handleKeyUP(e)}
+          >
+            {index} : {item.sickNm}
           </TermItem>
         ))}
       </TermList>
