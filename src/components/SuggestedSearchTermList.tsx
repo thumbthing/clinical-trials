@@ -81,7 +81,7 @@ function SuggestedSearchTermList() {
     },
   };
 
-  const handleKeyUP = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     e.preventDefault();
     const keyInserted = e.key as KeyEventType;
 
@@ -101,7 +101,7 @@ function SuggestedSearchTermList() {
     }
   }, [selectedItemIndex]);
 
-  const sessionDataList = async (inputText: string) => {
+  const getSessionDataList = async (inputText: string) => {
     try {
       const sessionData = await sessionParser(inputText);
       if (sessionData) {
@@ -118,7 +118,7 @@ function SuggestedSearchTermList() {
   const isInputEmpty = input === '';
 
   useEffect(() => {
-    sessionDataList(input);
+    getSessionDataList(input);
   }, [input]);
 
   return (
@@ -129,11 +129,9 @@ function SuggestedSearchTermList() {
             key={item.sickCd}
             tabIndex={0}
             ref={index === selectedItemIndex ? focusRef : null}
-            onKeyDown={(e) => handleKeyUP(e)}
+            onKeyDown={(e) => handleKeyDown(e)}
           >
-            <SickName>
-              {index} : {item.sickNm}
-            </SickName>
+            <SickName>{item.sickNm}</SickName>
           </TermItem>
         ))}
       </TermList>
