@@ -4,7 +4,7 @@ import { SearchFunctionContext } from '../context/FunctionContext';
 import handleError from '../utils/errorHandler';
 import debounceFunction from '../utils/debounce';
 import checkInputValid from '../utils/checkInputTextValid';
-import { Button, Input, Container } from '../styles/SearchInput.style';
+import { Button, Input, Container, SearchInputListBox } from '../styles/SearchInput.style';
 import SuggestedSearchTermList from './SuggestedSearchTermList';
 
 function SearchInput() {
@@ -16,14 +16,16 @@ function SearchInput() {
 
   const getTermAndAddToSessionStorage = async (text: string) => {
     try {
-      const dataFromDb = await getTerm(text);
       const checkCachedId = !cachedId.includes(text);
-      const checkDataLength = dataFromDb.length !== 0;
+      if (checkCachedId) {
+        const dataFromDb = await getTerm(text);
+        const checkDataLength = dataFromDb.length !== 0;
 
-      if (checkCachedId && checkDataLength) {
-        addToSessionStorage(text, dataFromDb);
-        const newCachedArray = [...cachedId, text];
-        setState((prevState) => ({ ...prevState, cachedId: newCachedArray, searchTermsArray: dataFromDb }));
+        if (checkDataLength) {
+          addToSessionStorage(text, dataFromDb);
+          const newCachedArray = [...cachedId, text];
+          setState((prevState) => ({ ...prevState, cachedId: newCachedArray, searchTermsArray: dataFromDb }));
+        }
       }
     } catch (error) {
       handleError(error);
@@ -92,6 +94,12 @@ function SearchInput() {
     }
   }, [isSelectingSuggestedTerms, selectedItemIndex]);
 
+  useEffect(() => {
+    if (input === '') {
+      setState((prevState) => ({ ...prevState, searchTermsArray: [] }));
+    }
+  }, [input]);
+
   // 확인용 콘솔
 
   useEffect(() => {
@@ -102,13 +110,14 @@ function SearchInput() {
     console.log('inputDelete               : \n', inputDelete);
     console.log('selectedItemIndex         : \n', selectedItemIndex);
     console.log('isSelectingSuggestedTerms : \n', isSelectingSuggestedTerms);
+
     console.log('=========console.log end===========');
   }, [state]);
 
   return (
     <Container>
       <Button type="button">{`<-`}</Button>
-      <div>
+      <SearchInputListBox>
         <Input
           type="search"
           ref={isSelectingSuggestedTerms === false ? inputRef : null}
@@ -118,7 +127,7 @@ function SearchInput() {
           value={input}
         />
         <SuggestedSearchTermList />
-      </div>
+      </SearchInputListBox>
       <Button type="button" onClick={resetInput}>
         x
       </Button>
