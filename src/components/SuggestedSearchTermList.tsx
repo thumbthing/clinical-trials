@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { SearchContext } from '../context/SearchContext';
 import { sessionParser } from '../utils/sessionHandler';
 import handleError from '../utils/errorHandler';
-import { ListContainer, TermList, TermItem } from '../styles/SuggestedSearchTermList.style';
+import { ListContainer, TermList, TermItem, SickName } from '../styles/SuggestedSearchTermList.style';
 
 type KeyEventActiontType = {
   ArrowDown: () => void;
@@ -127,9 +127,11 @@ function SuggestedSearchTermList() {
             key={item.sickCd}
             tabIndex={0}
             ref={index === selectedItemIndex ? focusRef : null}
-            onKeyUp={(e) => handleKeyUP(e)}
+            onKeyDown={(e) => handleKeyUP(e)}
           >
-            {index} : {item.sickNm}
+            <SickName>
+              {index} : {item.sickNm}
+            </SickName>
           </TermItem>
         ))}
       </TermList>
