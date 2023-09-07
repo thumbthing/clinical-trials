@@ -1,4 +1,4 @@
-import React, { ChangeEvent, useCallback, useEffect } from 'react';
+import React, { ChangeEvent, useCallback, useEffect, useRef } from 'react';
 import { SearchContext } from '../context/SearchContext';
 import { SearchFunctionContext } from '../context/FunctionContext';
 import handleError from '../utils/errorHandler';
@@ -9,6 +9,8 @@ import { Button, Input, Container } from '../styles/SearchInput.style';
 function SearchInput() {
   const { state, setState } = SearchContext();
   const { changeInput, getTerm, addToSessionStorage, deleteOldSession } = SearchFunctionContext();
+
+  const inputRef = useRef<HTMLInputElement | null>(null);
 
   const getTermAndAddToSessionStorage = async (text: string) => {
     try {
@@ -71,18 +73,29 @@ function SearchInput() {
     if (e.key === 'ArrowDown') {
       e.preventDefault();
       e.stopPropagation();
-      setState((prevState) => ({
-        ...prevState,
-        isSelectingSuggestedTerms: true,
-      }));
+      const isSuggestedTermExist = state.searchTermsArray.length !== 0;
+      if (isSuggestedTermExist) {
+        setState((prevState) => ({
+          ...prevState,
+          isSelectingSuggestedTerms: true,
+        }));
+      }
     }
   };
+
+  useEffect(() => {
+    if (state.isSelectingSuggestedTerms === false) {
+      inputRef?.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      inputRef?.current?.focus();
+    }
+  }, [state.isSelectingSuggestedTerms, state.selectedItemIndex]);
 
   return (
     <Container>
       <Button type="button">뒤로가기</Button>
       <Input
         type="search"
+        ref={state.isSelectingSuggestedTerms === false ? inputRef : null}
         onChange={handleChangeInput}
         onKeyDown={(e) => ArrowKeyHandle(e)}
         placeholder="검색창"
