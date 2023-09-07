@@ -62,7 +62,7 @@ function SearchInput() {
 
   const resetInput = async () => {
     try {
-      setState((prevState) => ({ ...prevState, input: '' }));
+      setState((prevState) => ({ ...prevState, input: '', searchTermsArray: [] }));
     } catch (error) {
       handleError(error);
     }
@@ -89,10 +89,21 @@ function SearchInput() {
       inputRef?.current?.focus();
     }
   }, [state.isSelectingSuggestedTerms, state.selectedItemIndex]);
+  // 확인용 콘솔
 
+  useEffect(() => {
+    console.log('========console.log start============');
+    console.log('input                     : \n', state.input);
+    console.log('searchTemrsArray          : \n', state.searchTermsArray);
+    console.log('cachedId                  : \n', state.cachedId);
+    console.log('inputDelete               : \n', state.inputDelete);
+    console.log('selectedItemIndex         : \n', state.selectedItemIndex);
+    console.log('isSelectingSuggestedTerms : \n', state.isSelectingSuggestedTerms);
+    console.log('=========console.log end===========');
+  }, [state]);
   return (
     <Container>
-      <Button type="button">뒤로가기</Button>
+      <Button type="button">{`<-`}</Button>
       <Input
         type="search"
         ref={state.isSelectingSuggestedTerms === false ? inputRef : null}
@@ -102,9 +113,9 @@ function SearchInput() {
         value={state.input}
       />
       <Button type="button" onClick={resetInput}>
-        input 창 삭제
+        x
       </Button>
-      <Button type="submit">검색하기</Button>
+      <Button type="submit">0</Button>
     </Container>
   );
 }
