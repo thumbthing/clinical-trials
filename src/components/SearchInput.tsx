@@ -70,6 +70,7 @@ function SearchInput() {
   const ArrowKeyHandle = (e: React.KeyboardEvent) => {
     if (e.key === 'ArrowDown') {
       e.preventDefault();
+      e.stopPropagation();
       setState((prevState) => ({
         ...prevState,
         isSelectingSuggestedTerms: true,
