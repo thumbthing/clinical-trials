@@ -10,6 +10,8 @@ export type StateType = {
   searchTermsArray: SickArray[];
   cachedId: string[];
   inputDelete: boolean;
+  selectedItemIndex: number;
+  isSelectingSuggestedTerms: boolean;
 };
 
 export type FunctionType = {

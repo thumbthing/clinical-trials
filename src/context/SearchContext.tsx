@@ -6,6 +6,8 @@ const defaultState: StateType = {
   searchTermsArray: [],
   cachedId: [],
   inputDelete: false,
+  selectedItemIndex: -1,
+  isSelectingSuggestedTerms: false,
 };
 
 const StateContext = createContext<
