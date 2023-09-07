@@ -51,26 +51,25 @@ function SuggestedSearchTermList() {
       return null;
     },
     ArrowUp: () => {
-      if (selectedItemIndex === -1) {
-        return null;
-      }
-      if (selectedItemIndex === 0) {
+      if (selectedItemIndex <= 0) {
+        setState((prevState) => ({
+          ...prevState,
+          isSelectingSuggestedTerms: false,
+          selectedItemIndex: -1,
+        }));
+      } else {
         setState((prevState) => ({
           ...prevState,
           selectedItemIndex: prevState.selectedItemIndex - 1,
         }));
-        return null;
       }
-      setState((prevState) => ({
-        ...prevState,
-        selectedItemIndex: prevState.selectedItemIndex - 1,
-      }));
       return null;
     },
     Escape: () => {
       setState((prevState) => ({
         ...prevState,
         isSelectingSuggestedTerms: false,
+        selectedItemIndex: -1,
       }));
     },
     Enter: () => {
@@ -85,7 +84,6 @@ function SuggestedSearchTermList() {
   const handleKeyUP = (e: React.KeyboardEvent) => {
     e.preventDefault();
     const keyInserted = e.key as KeyEventType;
-    console.log('check key inserted', keyInserted);
 
     if (KeyEventAction[keyInserted]) {
       KeyEventAction[keyInserted]();
@@ -97,6 +95,9 @@ function SuggestedSearchTermList() {
     if (focusRef?.current) {
       focusRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
       focusRef.current.focus();
+    }
+    if (selectedItemIndex <= -1) {
+      focusRef.current?.blur();
     }
   }, [selectedItemIndex]);
 
