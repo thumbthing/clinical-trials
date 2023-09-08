@@ -32,10 +32,7 @@ function SuggestedSearchTermList() {
         return null;
       }
       if (listRef.current.childElementCount === selectedItemIndex + 1) {
-        setState((prevState) => ({
-          ...prevState,
-          selectedItemIndex: 0,
-        }));
+        return null;
       }
       if (selectedItemIndex === -1) {
         setState((prevState) => ({
