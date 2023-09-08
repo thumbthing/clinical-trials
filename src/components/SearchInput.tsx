@@ -72,7 +72,6 @@ function SearchInput() {
     setTimeout(() => deleteOldTerm(), 100000000);
   }, [cachedId]);
 
-  // 브라우저 이벤트 해제
   const ArrowKeyHandle = (e: React.KeyboardEvent) => {
     if (e.key === 'ArrowDown') {
       e.preventDefault();
@@ -85,6 +84,10 @@ function SearchInput() {
         }));
       }
     }
+  };
+
+  const onInputClick = () => {
+    setState((prevState) => ({ ...prevState, isSelectingSuggestedTerms: false, selectedItemIndex: -1 }));
   };
 
   useEffect(() => {
@@ -125,6 +128,7 @@ function SearchInput() {
           onKeyDown={(e) => ArrowKeyHandle(e)}
           placeholder="검색창"
           value={input}
+          onClick={onInputClick}
         />
         <SuggestedSearchTermList />
       </SearchInputListBox>
